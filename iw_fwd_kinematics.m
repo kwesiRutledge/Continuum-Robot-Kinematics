@@ -1,7 +1,14 @@
-function [ iw_htm ] = iw_fwd_kinematics( l , l_back , r_i )
-%iw_fwd_kinematics Using Ian Walker's 2006 on Kinematics of Continuum Robots to
+function [ iw_htm ] = iw_fwd_kinematics( varargin )
+%iw_fwd_kinematics Using Ian Walker's 2006 paper on Kinematics of Continuum Robots to
 %                  present a clear pathway from input tendon lengths to output
 %                  coordinates.
+%
+% Possible Usages:
+%    iw_fwd_kinematics( l , l_back , r_i )
+%    iw_fwd_kinematics( l , l_back , r_i , n )
+%   
+%    Use the version with 4 arguments when you want to define the number of "segments"
+%    (use )that make up your continuum arm.    
 %
 % Inputs:
 %    l      : l is a vector with 3 dimensons 
@@ -18,6 +25,31 @@ function [ iw_htm ] = iw_fwd_kinematics( l , l_back , r_i )
 %   - This is a three tendon robot where the three tendon lengths are
 %     stored in vector l.
 %
+% Modified:
+%   - 9/7/2016: + to accomodate 2 different styles of calling this function.
+%
+% Current Issues:
+%   - Despite my directly copying relationships from the paper, it appears
+%     that directions are flipped and that the tendons are actually mapped to
+%     
+
+%% PROCESS INPUTS
+
+if( (nargin ~= 3) && ( nargin ~=4) )
+    disp('Improper number of arguments to the function.')
+    disp('Currently only 3 or 4 arguments are supported.')
+end
+
+l       = varargin{1};
+l_back  = varargin{2};
+d       = varargin{3};
+
+if( nargin == 4 )
+    n = varargin{4};
+else
+    n = 1;
+end
+ 
 
 %% CONSTANTS
 
@@ -25,12 +57,15 @@ function [ iw_htm ] = iw_fwd_kinematics( l , l_back , r_i )
 %only 1 curvature overall. So we will assume that each trunk = our segment.
 %Therefore each trunk is a 1 segment long affair.
 
-n = 1;
-d = r_i;
-
 % Note that the positions of cables 1, 2 and 3 on the circumference
 % of the trunk with respect to the x axis are 90°, 210°
 % and -30°
+
+correction_angle = pi;
+
+smallest_tendon = find( min(l) == l );
+
+%correction_angle = 120 *( smallest_tendon - 1 );
 
 %% ACTUATOR SPACE TO CONFIGURATION SPACE
 
@@ -47,8 +82,8 @@ if (l(1) == l(2)) && (l(1) == l(3)) && (l(2)==l(3))
     A = [ eye(3) [0;0;l_back] ; zeros(1,3) 1 ];
     
 else
-    s = (n*d*sum(l))/sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3));
-    s = s * asin( sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3))/(3*n*d));
+    s = (n*d*sum(l))/(sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3)));
+    s = s * asin( sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3))/(3*n*d))
 
     % Kappa and phi are defined by equations (15) and (16)
     % WARNING: phi turns into NaN when l1=l2=l3. (it becomes atan( 0 / 0 ), i
@@ -56,14 +91,24 @@ else
 
     kappa = 2 * sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3)) / ( d* sum(l) );
 
-    phi   = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
+    % Phi calculation becomes problematic because of the atan() function's range
+    % this switch corrects for that. Hopefully. :'(
+    switch min(l)
+        case {l(1),l(3)}
+            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
+        case l(2)
+            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
+            phi = phi + pi;
+        otherwise
+            disp('Not ready for this yet!')
+    end
 
     if isnan( phi )
         disp('Somethings wrong with phi!!!')
         % I don't believe this model was intended to help in situations where
         % the robot is straight.
-        disp('Setting phi to 0?')
-        phi = 0;
+        disp('Setting phi to -pi/2?')
+        phi = -pi/2;
     end
 
     %% HTM
@@ -103,7 +148,15 @@ else
 
     end
 
-%Save result
-iw_htm = A;
+%Rotate and then save result
+r = [ cos( correction_angle ) -sin(correction_angle) ;
+      sin( correction_angle ) cos(correction_angle) ];
+
+htm_rot_correction = [ r zeros(2) ;
+                       0 0 1 0 ;
+                       0 0 0 1 ];
+
+iw_htm = (htm_rot_correction) * A ;
+
 end
 
