@@ -4,8 +4,8 @@ function [ iw_htm ] = iw_fwd_kinematics( varargin )
 %                  coordinates.
 %
 % Possible Usages:
-%    iw_fwd_kinematics( l , l_back , r_i )
-%    iw_fwd_kinematics( l , l_back , r_i , n )
+%    iw_fwd_kinematics( l , l_back , d )
+%    iw_fwd_kinematics( l , l_back , d , n )
 %   
 %    Use the version with 4 arguments when you want to define the number of "segments"
 %    (use )that make up your continuum arm.    
@@ -15,10 +15,10 @@ function [ iw_htm ] = iw_fwd_kinematics( varargin )
 %             (I expect a row, but I think it should work either way)
 %             l(1) = l1, l(2) = l2, etc.
 %    l_back : The length of the flexible backbone
-%    r_i    : Distance from the central backbone to any of the tendons
+%    d    : Distance from the central backbone to any of the tendons
 %
 % Assumes: 
-%   - All tendons are spaced an equal distance (r_i) from the central
+%   - All tendons are spaced an equal distance (d) from the central
 %     backbone.
 %   - Backbone length (l_back) does not change.
 %   - Backbone length (l_back) is not zero.
@@ -83,7 +83,7 @@ if (l(1) == l(2)) && (l(1) == l(3)) && (l(2)==l(3))
     
 else
     s = (n*d*sum(l))/(sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3)));
-    s = s * asin( sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3))/(3*n*d))
+    s = s * asin( sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3))/(3*n*d));
 
     % Kappa and phi are defined by equations (15) and (16)
     % WARNING: phi turns into NaN when l1=l2=l3. (it becomes atan( 0 / 0 ), i
@@ -94,14 +94,27 @@ else
     % Phi calculation becomes problematic because of the atan() function's range
     % this switch corrects for that. Hopefully. :'(
     switch min(l)
-        case {l(1),l(3)}
+        case {l(1)}
             phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
-        case l(2)
+            %You'll probably need a picture to justify this for yourself, but this is how you correct
+            %for the negative values of phi that will correspond to the angles (in this case) where
+            % phi > pi/2
+            if( phi < 0 )
+                phi = phi + pi;
+            end
+
+        case {l(2)}
             phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
-            phi = phi + pi;
+            phi = phi + pi;     %Always shift this one.
+        case l(3)
+            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
+            %Phi should always be correct for this one.
         otherwise
             disp('Not ready for this yet!')
     end
+
+    %Debugging
+    disp([ 'phi: ' num2str(phi) ', l: ' num2str(l(1)) ', ' num2str(l(2)) ', ' num2str(l(3)) ])
 
     if isnan( phi )
         disp('Somethings wrong with phi!!!')
@@ -157,6 +170,7 @@ htm_rot_correction = [ r zeros(2) ;
                        0 0 0 1 ];
 
 iw_htm = (htm_rot_correction) * A ;
+%iw_htm = A;
 
 end
 
