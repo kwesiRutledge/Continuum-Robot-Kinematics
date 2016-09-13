@@ -50,7 +50,6 @@ if( nargin == 4 )
 else
     n = 1;
 end
- 
 
 %% CONSTANTS
 
@@ -94,25 +93,8 @@ else
 
     % Phi calculation becomes problematic because of the atan() function's range
     % this switch corrects for that. Hopefully. :'(
-    switch min(l)
-        case {l(1)}
-            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
-            %You'll probably need a picture to justify this for yourself, but this is how you correct
-            %for the negative values of phi that will correspond to the angles (in this case) where
-            % phi > pi/2
-            if( phi < 0 )
-                phi = phi + pi;
-            end
-
-        case {l(2)}
-            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
-            phi = phi + pi;     %Always shift this one.
-        case l(3)
-            phi = atan( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1))/(l(2)-l(3)) );
-            %Phi should always be correct for this one.
-        otherwise
-            disp('Not ready for this yet!')
-    end
+    
+    phi = atan2( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1)) , (l(2)-l(3)) );
 
     %Debugging
     %disp([ 'phi: ' num2str(phi) ', l: ' num2str(l(1)) ', ' num2str(l(2)) ', ' num2str(l(3)) ])
