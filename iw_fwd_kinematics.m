@@ -15,7 +15,8 @@ function [ iw_htm ] = iw_fwd_kinematics( varargin )
 %             (I expect a row, but I think it should work either way)
 %             l(1) = l1, l(2) = l2, etc.
 %    l_back : The length of the flexible backbone
-%    d    : Distance from the central backbone to any of the tendons
+%    d      : Distance from the central backbone to any of the tendons
+%    n      : The number of "segments" on the manipulators backbone.
 %
 % Assumes: 
 %   - All tendons are spaced an equal distance (d) from the central
@@ -114,7 +115,7 @@ else
     end
 
     %Debugging
-    disp([ 'phi: ' num2str(phi) ', l: ' num2str(l(1)) ', ' num2str(l(2)) ', ' num2str(l(3)) ])
+    %disp([ 'phi: ' num2str(phi) ', l: ' num2str(l(1)) ', ' num2str(l(2)) ', ' num2str(l(3)) ])
 
     if isnan( phi )
         disp('Somethings wrong with phi!!!')
