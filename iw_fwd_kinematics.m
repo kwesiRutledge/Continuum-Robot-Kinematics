@@ -90,9 +90,6 @@ else
     % think. So, DO NOT INPUT STRAIGHT CONFIGURATIONS TO THIS FUNCTION.
 
     kappa = 2 * sqrt( sum( l.^2 ) - l(1)*l(2) - l(2)*l(3) - l(1)*l(3)) / ( d* sum(l) );
-
-    % Phi calculation becomes problematic because of the atan() function's range
-    % this switch corrects for that. Hopefully. :'(
     
     phi = atan2( (sqrt(3)/3) * ( l(3) + l(2) - 2*l(1)) , (l(2)-l(3)) );
 
