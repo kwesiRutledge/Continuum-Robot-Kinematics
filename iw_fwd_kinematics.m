@@ -55,7 +55,6 @@ end
 
 %The paper treats each trunk as being split into n segments, while having
 %only 1 curvature overall. So we will assume that each trunk = our segment.
-%Therefore each trunk is a 1 segment long affair.
 
 % Note that the positions of cables 1, 2 and 3 on the circumference
 % of the trunk with respect to the x axis are 90°, 210°
