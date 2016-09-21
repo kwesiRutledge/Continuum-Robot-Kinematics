@@ -61,11 +61,8 @@ end
 % of the trunk with respect to the x axis are 90°, 210°
 % and -30°
 
-correction_angle = pi;
-
-smallest_tendon = find( min(l) == l );
-
-%correction_angle = 120 *( smallest_tendon - 1 );
+correction_angle = pi;  %For some reason, a rotation of 180 degrees (pi) is needed
+                        %after the full calculation is complete.
 
 %% ACTUATOR SPACE TO CONFIGURATION SPACE
 
