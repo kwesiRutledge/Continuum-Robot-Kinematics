@@ -4,8 +4,8 @@ function [ J ] = get_cp_jacobian( varargin )
 % 			  	 Continuum Robots.
 %
 % Possible Usages:
-% 	get_iw_jacobian( 'D-H,f1' , s , kappa , phi )
-%   get_iw_jacobian( 'f2'     , l , l0    , d   , n )
+% 	J = get_iw_jacobian( 'D-H,f1' , s , kappa , phi )
+%   J = get_iw_jacobian( 'f2'     , l , l0    , d   , n )
 %
 % Assumptions:
 % 	- 'f2' option is not tested for the condition when l1 == l2 == l3. There should be a singularity here
@@ -14,8 +14,8 @@ function [ J ] = get_cp_jacobian( varargin )
 % Inputs:
 % 	s 		, s is the arc length of the segment (the length of its curved central backbone)
 % 	kappa 	, kappa is the curvature of the robot (1/"radius of curvature")
-% 	phi 	, phi is the angle the segmetn creates relative to the axis
-%			  (measured from the axis and contained in the xy-plane that the segment creates)
+% 	phi 	, phi is the angle the segment creates relative to the x-axis
+%			  (measured from the x-axis and contained in the xy-plane that the segment creates)
 %   l       , l is a vector of the three tendon lengths (has 3 entries)
 %             (I expect a row, but I think it should work either way)
 %             l(1) = l1, l(2) = l2, etc. 
@@ -32,13 +32,20 @@ function [ J ] = get_cp_jacobian( varargin )
 switch( varargin{1} )
 	case 'D-H,f1'
 		%This means to calculate the Jacobian between the position/orientation to configuration space variables
-		% List of Transformations:
-		% 	x -> Denavit-Hartenberg parameters -> (s,kappa, phi)
+		% Image Explanation:
+		%      d(x,y,z,u,v,w)
+		%  J = --------------
+		%      d(s,kappa,phi) 
 
 		%Process inputs
 		s 	  = varargin{2};
 		kappa = varargin{3};
 		phi   = varargin{4};
+
+		%Screening for potential problems.
+		if( s == 0 )
+			disp('Warning: s is zero which may mean the function''s output will be nonsense');
+		end
 
 		%Create constants
 		J = zeros(6,3);
@@ -77,14 +84,24 @@ switch( varargin{1} )
 
 	case 'f2'
 		%This means to calculate the Jacobian between the configuration space variables and tendon lengths
-		% List of Transformations:
-		% 	(s, kappa, phi) -> l = ( l1 , l2 , l3)
+		% Image Explanation:
+		%      d(s,kappa,phi)
+		%  J = --------------
+		%        d(l1,l2,l3) 
 
 		%Process inputs
 		l  = varargin{2};
 		l0 = varargin{3};
 		d  = varargin{4};
 		n  = varargin{5};
+
+		%Screening for potential problems.
+		if( (l(1) == l(2)) && (l(2)==l(3)) )
+			disp('Warning: All tendon lengths are equal which means device is in a singular configuration.');
+		end
+		if( n <= 0 )
+			disp('Warning: Number of "sections" should be at least 1. ')
+		end
 
 		%Create constants
 		J = zeros(3);
