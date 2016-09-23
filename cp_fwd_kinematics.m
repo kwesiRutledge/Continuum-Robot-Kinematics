@@ -39,6 +39,10 @@ function [ res ] = cp_fwd_kinematics( varargin )
 %     that directions are flipped and that the tendons are actually mapped to
 %     
 
+%% Constants
+correction_angle = pi;  %For some reason, a rotation of 180 degrees (pi) is needed
+                        %after the full calculation is complete.
+
 switch( varargin{1} )
     case 'f1,f2 (HTM)'
         %This indicates that we want to transform a point in the actuator space (l) to 
@@ -46,23 +50,53 @@ switch( varargin{1} )
         %Diagram Explanation:
         %   l = (l1, l2, l3) -> (x,y,z)
 
-
-
         %% PROCESS INPUTS
 
         if( (nargin ~= 4) && ( nargin ~=5) )
             disp([ 'Improper number of arguments to the function. 4 or 5 acceptable, ' num2str(nargin) ' received.' ])
         end
 
-        l       = varargin{2};
-        l_back  = varargin{3};
-        d       = varargin{4};
+        if( nargin ~= 5 )
+            disp(['Error: Expected 5 arguments, received ' num2str(nargin) '.' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        l      = varargin{2};
+        l_back = varargin{3};
+        d      = varargin{4};
 
         if( nargin == 5 )
             n = varargin{5};
         else
             n = 1;
         end
+
+        if( sum( l <= 0 ) > 0 )
+            disp([ 'Error: One of the input tendon lengths is negative!' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        if( l_back <= 0 )
+            disp( [ 'Error: Expect length of backbone to be nonnegative. Received ' num2str(l_back) '.' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        if( n <= 0 )
+            disp( [ 'n must be a nonnegative integer. Received ' num2str(n) '.' ] );
+            %Exit Program early.
+            res = -1; return;
+        end
+
+        if( d <= 0 )
+            disp( [ 'd must be a positive number. Received ' num2str(d) '.' ] );
+            %Exit program early.
+            res = -1; return;
+        end
+
+        
 
         %% CONSTANTS
 
@@ -72,9 +106,6 @@ switch( varargin{1} )
         % Note that the positions of cables 1, 2 and 3 on the circumference
         % of the trunk with respect to the x axis are 90°, 210°
         % and -30°
-
-        correction_angle = pi;  %For some reason, a rotation of 180 degrees (pi) is needed
-                                %after the full calculation is complete.
 
         %% ACTUATOR SPACE TO CONFIGURATION SPACE
 
@@ -223,6 +254,44 @@ switch( varargin{1} )
         %Diagram Explanation:
         %   l = (l1, l2, l3) -> (s,kappa,phi)
 
+        %Process Inputs
+
+        if( nargin ~= 5 )
+            disp(['Error: Expected 5 arguments, received ' num2str(nargin) '.' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        l      = varargin{2};
+        l_back = varargin{3};
+        d      = varargin{4};
+        n      = varargin{5};
+
+        if( sum( l <= 0 ) > 0 )
+            disp([ 'Error: One of the input tendon lengths is negative!' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        if( l_back <= 0 )
+            disp( [ 'Error: Expect length of backbone to be nonnegative. Received ' num2str(l_back) '.' ])
+            %Exit program
+            res = -1; return;
+        end
+
+        if( n <= 0 )
+            disp( [ 'n must be a nonnegative integer. Received ' num2str(n) '.' ] );
+            %Exit Program early.
+            res = -1; return;
+        end
+
+        if( d <= 0 )
+            disp( [ 'd must be a positive number. Received ' num2str(d) '.' ] );
+            %Exit program early.
+            res = -1; return;
+        end
+
+        % Calculate Config. Space Variables
 
         if (l(1) == l(2)) && (l(1) == l(3)) && (l(2)==l(3))
             %When the robot is straight, the HTM can be quickly calculated.
